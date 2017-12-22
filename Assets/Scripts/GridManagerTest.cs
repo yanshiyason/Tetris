@@ -1,29 +1,27 @@
-﻿using UnityEngine;
-using UnityEngine.TestTools;
+﻿using System.Collections;
 using NUnit.Framework;
-using System.Collections;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 public class GridTest {
 
 	[Test]
-	public void Grid_Initializes_With_The_Correct_Amount_Of_Cells() {
+	public void Grid_Initializes_With_The_Correct_Amount_Of_Cells () {
 		var width = 24;
 		var height = 48;
 		var totalCells = height * width;
-		var gridManager = new GridManager(24, 48);
-		Assert.AreEqual(gridManager.grid.GetLength(0), 24);
-		Assert.AreEqual(gridManager.grid.GetLength(1), 48);
+		var gridManager = new GridManager (24, 48);
+		Assert.AreEqual (gridManager.grid.GetLength (0), 24);
+		Assert.AreEqual (gridManager.grid.GetLength (1), 48);
 	}
 
 	[Test]
-	public void GridTestSimplePasses() {
-	}
-
+	public void GridTestSimplePasses () { }
 
 	// A UnityTest behaves like a coroutine in PlayMode
 	// and allows you to yield null to skip a frame in EditMode
 	[UnityTest]
-	public IEnumerator GridTestWithEnumeratorPasses() {
+	public IEnumerator GridTestWithEnumeratorPasses () {
 		// Use the Assert class to test conditions.
 		// yield to skip a frame
 		yield return null;

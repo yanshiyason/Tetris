@@ -1,20 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Linq;
 using Tetris.Extensions;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GridManager {
-	public bool[,] grid;
+	public bool[, ] grid;
 	public int width;
 	public int height;
 
-	public GridManager(int width = 12, int height = 24) {
+	UnityAction moveDownListener;
+	UnityAction moveLeftListener;
+	UnityAction moveRightListener;
+	UnityAction rotateLeftListener;
+	UnityAction rotateRightListener;
+
+	public GridManager (int width = 12, int height = 24) {
 		this.width = width;
 		this.height = height;
 
-        grid = new bool[width, height];
+		grid = new bool[width, height];
 
 		// grid = Enumerable.Range(0, width).Select(
 		// 	_row => Enumerable.Range(0, height).Select(_col => null).ToArray()
@@ -27,20 +33,18 @@ public class GridManager {
 	// 	SpawnInGrid(row, col);
 	// }
 
-	public bool AssertValidGroupMove(Transform group, Vector3 to)
-	{
-		bool[,] initalGridState = grid.Clone() as bool[,];
+	public bool AssertValidGroupMove (Transform group, Vector3 to) {
+		bool[, ] initalGridState = grid.Clone () as bool[, ];
 
-		IEnumerable<Transform> transforms = TetrisManager.fallingBlockGroup.transform.Cast<Transform>();
+		IEnumerable<Transform> transforms = TetrisManager.fallingBlockGroup.transform.Cast<Transform> ();
 
-		foreach (var t in transforms)
-		{
-			grid.SetGridValue(false, t.position);
+		foreach (var t in transforms) {
+			grid.SetGridValue (false, t.position);
 		}
 
-		bool isValid = transforms.Select(t => AssertValidMove(t.position, to)).All(valid => valid == true);
+		bool isValid = transforms.Select (t => AssertValidMove (t.position, to)).All (valid => valid == true);
 
-		if (isValid) {			
+		if (isValid) {
 			return true;
 		} else {
 			grid = initalGridState;
@@ -48,45 +52,42 @@ public class GridManager {
 		}
 	}
 
-	public bool AssertValidMove(Vector3 from, Vector3 to)
-	{
-		int x = (int)(from + to).x;
-		int y = (int)(from + to).y;
-		return AssertValid(x, y);
+	public bool AssertValidMove (Vector3 from, Vector3 to) {
+		int x = (int) (from + to).x;
+		int y = (int) (from + to).y;
+		return AssertValid (x, y);
 	}
 
-    public bool AssertValid(int x, int y) {
-        return grid[x,y] == false;
-    }
-
-	void SpawnInGrid(int x, int y) {
-		var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-		cube.transform.position = new Vector3(x, y, 0);
+	public bool AssertValid (int x, int y) {
+		return grid[x, y] == false;
 	}
 
-	void Move(Transform group)
-	{
-		MarkgridAsOccupied(group.transform);
+	void SpawnInGrid (int x, int y) {
+		var cube = GameObject.CreatePrimitive (PrimitiveType.Cube);
+		cube.transform.position = new Vector3 (x, y, 0);
 	}
 
-	void MarkgridAsOccupied(Transform group)
-	{
+	void Move (Transform group) {
+		MarkgridAsOccupied (group.transform);
+	}
+
+	void MarkgridAsOccupied (Transform group) {
 		foreach (Transform t in group) {
-			grid.SetValue(true, (int)t.position.x, (int)t.position.y);
+			grid.SetValue (true, (int) t.position.x, (int) t.position.y);
 		}
-		Inspect();
+		Inspect ();
 	}
 
 	// Print the grid as a series of 0s and 1s for debugging.
-	public void Inspect() {
+	public void Inspect () {
 		var output = "";
-		for (int row = 0; row < width; row++ ) {
+		for (int row = 0; row < width; row++) {
 			output += "\n";
 			for (int col = 0; col < height; col++) {
-				var bit = grid[row,col] ? "1" : "0";
+				var bit = grid[row, col] ? "1" : "0";
 				output += bit;
 			}
 		}
-		Debug.Log(output);
+		Debug.Log (output);
 	}
 }

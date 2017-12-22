@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Linq;
 
 public class GameManager : MonoBehaviour {
 
@@ -10,49 +10,54 @@ public class GameManager : MonoBehaviour {
 	private GameObject WelcomeCanvas;
 	// private TetrisManager tetrisManager;
 
-	void Awake() {
+	void Awake () {
 		if (instance == null)
-			instance = new GameManager();
+			instance = new GameManager ();
 
 		else if (instance != this)
-			Destroy(gameObject);
+			Destroy (gameObject);
 
-		DontDestroyOnLoad(gameObject);
+		DontDestroyOnLoad (gameObject);
 	}
 
 	// Use this for initialization
 	void Start () {
-		if (isTitleScene())
-			WelcomeCanvas = Instantiate(Resources.Load("Prefabs/WelcomeCanvas") as GameObject);
-			print("Title scene");
-		if (isPlayScene())
-			print("Play scene");
+		if (isTitleScene ()) {
+			WelcomeCanvas = Instantiate (Resources.Load ("Prefabs/WelcomeCanvas") as GameObject);
+			print ("Title scene");
+
+		}
+
+		if (isPlayScene ()) {
+			print ("Play scene");
+		}
+
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
-		if (isTitleScene() && Input.GetKeyDown(KeyCode.Return)) {
-				StartGame();
+		if (isTitleScene () && Input.GetKeyDown (KeyCode.Return)) {
+			StartGame ();
 		}
 	}
 
-	void StartGame() {
-		StartCoroutine(LoadPlayScene());
+	void StartGame () {
+		StartCoroutine (LoadPlayScene ());
 	}
 
-	IEnumerator LoadPlayScene() {
-		AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("_Scenes/play");
+	IEnumerator LoadPlayScene () {
+		AsyncOperation asyncLoad = SceneManager.LoadSceneAsync ("_Scenes/play");
 		while (!asyncLoad.isDone) {
 			yield return null;
 		}
-		Destroy(WelcomeCanvas);
+		Destroy (WelcomeCanvas);
 	}
 
-	bool isTitleScene() {
-		return SceneManager.GetActiveScene().name == "title_screen";
+	bool isTitleScene () {
+		return SceneManager.GetActiveScene ().name == "title_screen";
 	}
 
-	bool isPlayScene() {
-		return SceneManager.GetActiveScene().name == "play";
+	bool isPlayScene () {
+		return SceneManager.GetActiveScene ().name == "play";
 	}
 }
