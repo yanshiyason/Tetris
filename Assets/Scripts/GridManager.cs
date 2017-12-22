@@ -35,7 +35,7 @@ public class GridManager {
 
 		foreach (var t in transforms)
 		{
-			grid.SetGridValue(false, t);
+			grid.SetGridValue(false, t.position);
 		}
 
 		bool isValid = transforms.Select(t => AssertValidMove(t.position, to)).All(valid => valid == true);

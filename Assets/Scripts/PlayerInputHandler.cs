@@ -19,11 +19,11 @@ public class PlayerInputHandler : MonoBehaviour, IPlayerInputHandler {
 		rotateLeftListener = new UnityAction(RotateLeft);
 		rotateRightListener = new UnityAction(RotateRight);
 
-		RegisterListener("MoveDown", moveDownListener);
-		RegisterListener("MoveLeft", moveLeftListener);
-		RegisterListener("MoveRight", moveRightListener);
-		RegisterListener("RotateLeft", rotateLeftListener);
-		RegisterListener("RotateRight", rotateRightListener);
+		EventManager.RegisterListener("MoveDown", moveDownListener);
+		EventManager.RegisterListener("MoveLeft", moveLeftListener);
+		EventManager.RegisterListener("MoveRight", moveRightListener);
+		EventManager.RegisterListener("RotateLeft", rotateLeftListener);
+		EventManager.RegisterListener("RotateRight", rotateRightListener);
 	}
 
 	public void MoveDown()
@@ -34,12 +34,12 @@ public class PlayerInputHandler : MonoBehaviour, IPlayerInputHandler {
 		IEnumerable<Transform> transforms = TetrisManager.fallingBlockGroup.transform.Cast<Transform>();
 		foreach (var t in transforms) {
 			Debug.Log(t.position);
-			Debug.Log(TetrisManager.grid.AssertValidMove(t.position, new Vector3(0, -1, 0)));
+			Debug.Log(TetrisManager.gridManager.AssertValidMove(t.position, new Vector3(0, -1, 0)));
 		}
 
 		bool isValid =
 			transforms
-				.Select(t => TetrisManager.grid.AssertValidMove(
+				.Select(t => TetrisManager.gridManager.AssertValidMove(
 					t.position, new Vector3(0, -1, 0))
 				)
 				.All(v => v == true);
@@ -82,15 +82,4 @@ public class PlayerInputHandler : MonoBehaviour, IPlayerInputHandler {
 		TetrisManager.fallingBlockGroup.transform.RotateRight();
 		TetrisManager.fallingBlockGroup.transform.LogTransforms();
 	}
-
-	private void RegisterListener(string eventName, UnityAction listener)
-	{
-		UnityEvent unityEvent = null;
-		PlayerInputListener.eventDictionary.TryGetValue(eventName, out unityEvent);
-		if (unityEvent == null)
-			return;
-
-		unityEvent.AddListener(listener);
-	}
-
 }

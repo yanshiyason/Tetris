@@ -6,50 +6,32 @@ using UnityEngine.EventSystems;
 using Tetris.Extensions;
 
 class PlayerInputListener : MonoBehaviour {
-    void Update() {
+    void Update()
+    {
         ListenToPlayerInput();
     }
-
-    public static Dictionary <string, UnityEvent> eventDictionary = new Dictionary<string, UnityEvent>()
-    {
-        { "RotateRight", new UnityEvent() },
-        { "RotateLeft",  new UnityEvent() },
-        { "MoveRight",   new UnityEvent() },
-        { "MoveLeft",    new UnityEvent() },
-        { "MoveDown",    new UnityEvent() },
-    };
     
-    void ListenToPlayerInput() {
-        if (TetrisManager.fallingBlockGroup == null)
-            return;
+    void ListenToPlayerInput()
+    {
+		if (TetrisManager.fallingBlockGroup == null) {
+			return;
+		}
 
 		if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.RightArrow))
 		{
-            InvokeEvent("RotateRight");
+			EventManager.TriggerEvent("RotateRight");
 		} else if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.LeftArrow))
 		{
-            InvokeEvent("RotateLeft");
+			EventManager.TriggerEvent("RotateLeft");
 		} else if (Input.GetKeyDown(KeyCode.LeftArrow)) 
 		{
-            InvokeEvent("MoveLeft");
+			EventManager.TriggerEvent("MoveLeft");
 		} else if (Input.GetKeyDown(KeyCode.RightArrow))
 		{ 
-            InvokeEvent("MoveRight");
+			EventManager.TriggerEvent("MoveRight");
 		} else if (Input.GetKeyDown(KeyCode.DownArrow))
 		{
-            InvokeEvent("MoveDown");
+			EventManager.TriggerEvent("MoveDown");
 		}
 	}
-
-    void InvokeEvent(string eventName)
-    {
-        Debug.Log("Invoking event: " + eventName);
-        UnityEvent unityEvent = null;
-        eventDictionary.TryGetValue(eventName, out unityEvent);
-
-        if (unityEvent == null)
-            return;
-
-        unityEvent.Invoke();
-    }
 }

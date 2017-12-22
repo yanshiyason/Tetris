@@ -4,13 +4,12 @@ using NUnit.Framework;
 using System.Collections;
 
 public class TetrisManagerTest {
-	GameObject go;
-	TetrisManager tetrisManager;
+	static GameObject go;
 
 	[SetUp] public void Init()
     {
 		go = new GameObject();
-		tetrisManager = go.AddComponent<TetrisManager>();
+		go.AddComponent<TetrisManager>();
 	}
 
     [TearDown] public void Dispose()
@@ -34,7 +33,7 @@ public class TetrisManagerTest {
 		Assert.True(instance2 == null);
 	}
 
-	[UnityTest] public IEnumerator TetrisManager_FallingBlockGroupIsInstantiatedAfterFirstFrame()
+	[UnityTest] public IEnumerator TetrisManager_FallingBlockGroup_IsInstantiated_AfterFirstFrame()
 	{
 		yield return null;
 
@@ -45,6 +44,13 @@ public class TetrisManagerTest {
 	{
 		yield return null;
 		var component = TetrisManager.instance.GetComponent<PlayerInputHandler>();
+		Assert.True(component != null);
+	}
+
+	[UnityTest] public IEnumerator TetrisManager_Has_An_EventManagerComponent_Attached()
+	{
+		yield return null;
+		var component = TetrisManager.instance.GetComponent<EventManager>();
 		Assert.True(component != null);
 	}
 

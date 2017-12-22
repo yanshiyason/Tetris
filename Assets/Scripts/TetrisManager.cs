@@ -18,6 +18,7 @@ public class TetrisManager : MonoBehaviour {
 		SetupSingleton();
 		shapes = Resources.LoadAll("Prefabs/Shapes", typeof(GameObject));
 		gridManager = new GridManager();
+		gameObject.AddComponent<EventManager>();
 		gameObject.AddComponent<PlayerInputHandler>();
 		gameObject.AddComponent<PlayerInputListener>();
 	}
