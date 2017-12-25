@@ -12,6 +12,7 @@ namespace Tetris {
                 grid.SetValue (value, (int) v.x, (int) v.y);
             }
 
+            // TODO: Maybe remove
             public static void SetGridValues (this bool[, ] grid, bool value, Transform group, Vector3 nextPosition) {
                 IEnumerable<Transform> transforms = group.transform.Cast<Transform> ();
                 foreach (var t in transforms) {

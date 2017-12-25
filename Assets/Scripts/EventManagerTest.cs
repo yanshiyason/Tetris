@@ -16,35 +16,34 @@ public class EventManagerTest {
 
 	[TearDown] public void Dispose () { }
 
-	bool dummyFunctionCalled;
+	bool moveBlockHandlerCalled;
 	[UnityTest] public IEnumerator EventManager_Can_Add_Different_Events () {
-		var listener = new UnityAction (DummyFunction);
-		EventManager.RegisterListener ("MyNewEvent", listener);
+		EventManager.Instance.AddListener<MoveBlockGroupEvent> (MoveBlockHandler);
 
-		dummyFunctionCalled = false;
+		moveBlockHandlerCalled = false;
 
-		EventManager.TriggerEvent ("MyNewEvent");
+		EventManager.Instance.TriggerEvent (new MoveBlockGroupEvent (gameManager.transform, MoveDirection.Down));
 
 		yield return null;
 
-		Assert.True (dummyFunctionCalled);
+		Assert.True (moveBlockHandlerCalled);
 	}
 
 	[UnityTest] public IEnumerator EventManager_Can_Remove_A_Listener () {
-		var listener = new UnityAction (DummyFunction);
-		EventManager.RegisterListener ("MyNewEvent", listener);
+
+		EventManager.Instance.AddListener<MoveBlockGroupEvent> (MoveBlockHandler);
 
 		yield return null;
 
-		EventManager.DestroyListener ("MyNewEvent", listener);
+		EventManager.Instance.RemoveListener<MoveBlockGroupEvent> (MoveBlockHandler);
 
 		yield return null;
 
-		dummyFunctionCalled = false;
+		moveBlockHandlerCalled = false;
 
-		EventManager.TriggerEvent ("MyNewEvent");
+		EventManager.Instance.TriggerEvent (new MoveBlockGroupEvent (gameManager.transform, MoveDirection.Down));
 
-		Assert.False (dummyFunctionCalled);
+		Assert.False (moveBlockHandlerCalled);
 	}
 
 	// A UnityTest behaves like a coroutine in PlayMode
@@ -56,7 +55,7 @@ public class EventManagerTest {
 		yield return null;
 	}
 
-	public void DummyFunction () {
-		dummyFunctionCalled = true;
+	public void MoveBlockHandler (MoveBlockGroupEvent e) {
+		moveBlockHandlerCalled = true;
 	}
 }

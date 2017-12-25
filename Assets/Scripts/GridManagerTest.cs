@@ -10,9 +10,10 @@ public class GridTest {
 		var width = 24;
 		var height = 48;
 		var totalCells = height * width;
-		var gridManager = new GridManager (24, 48);
-		Assert.AreEqual (gridManager.grid.GetLength (0), 24);
-		Assert.AreEqual (gridManager.grid.GetLength (1), 48);
+		var gridManager = new GridManager ();
+		gridManager.Initialize (24, 48);
+		Assert.AreEqual (gridManager.Grid.GetLength (0), 24);
+		Assert.AreEqual (gridManager.Grid.GetLength (1), 48);
 	}
 
 	[Test]

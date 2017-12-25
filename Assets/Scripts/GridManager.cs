@@ -3,91 +3,159 @@ using System.Collections.Generic;
 using System.Linq;
 using Tetris.Extensions;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
-public class GridManager {
-	public bool[, ] grid;
-	public int width;
-	public int height;
+public class GridManager : MonoBehaviour {
+	public bool[, ] Grid;
+	public int Width;
+	public int Height;
 
-	UnityAction moveDownListener;
-	UnityAction moveLeftListener;
-	UnityAction moveRightListener;
-	UnityAction rotateLeftListener;
-	UnityAction rotateRightListener;
+	private int heightWithPadding;
 
-	public GridManager (int width = 12, int height = 24) {
-		this.width = width;
-		this.height = height;
+	public void Initialize (int width = 12, int height = 24) {
+		Width = width;
+		Height = height;
+		heightWithPadding = height + 10;
 
-		grid = new bool[width, height];
-
-		// grid = Enumerable.Range(0, width).Select(
-		// 	_row => Enumerable.Range(0, height).Select(_col => null).ToArray()
-		// ).ToArray();
+		Grid = new bool[width, heightWithPadding];
 	}
 
-	// public void SpawnRandom() {
-	// 	var row = Random.Range(0, width);
-	// 	var col = Random.Range(0, height);
-	// 	SpawnInGrid(row, col);
-	// }
+	void Awake () {
+		EventManager.Instance.AddListener<MoveBlockGroupEvent> (ValidateMoveHandler);
+		EventManager.Instance.AddListener<RotateBlockGroupEvent> (ValidateRotationHandler);
+	}
 
-	public bool AssertValidGroupMove (Transform group, Vector3 to) {
-		bool[, ] initalGridState = grid.Clone () as bool[, ];
+	private void ValidateMoveHandler (MoveBlockGroupEvent e) {
+		ValidateMove (e.CurrentPosition, e.Direction);
+	}
 
-		IEnumerable<Transform> transforms = TetrisManager.fallingBlockGroup.transform.Cast<Transform> ();
+	private void ValidateRotationHandler (RotateBlockGroupEvent e) {
+		ValidateRotation (e.CurrentPosition, e.Direction);
+	}
 
-		foreach (var t in transforms) {
-			grid.SetGridValue (false, t.position);
-		}
+	public void ValidateMove (Transform currentPosition, MoveDirection direction) {
+		bool[, ] initalGridState = Grid.Clone () as bool[, ];
 
-		bool isValid = transforms.Select (t => AssertValidMove (t.position, to)).All (valid => valid == true);
+		FreeGridForAllBlocksInGroup (currentPosition);
+
+		bool isValid = AssertValidGroupMove (currentPosition, DirectionToVector.For (direction));
 
 		if (isValid) {
-			return true;
+			EventManager.Instance.QueueEvent (new MoveValidEvent (currentPosition, direction));
 		} else {
-			grid = initalGridState;
-			return false;
+			Grid = initalGridState;
+			OccupyGridForAllBlocksInGroup (currentPosition);
+			EventManager.Instance.QueueEvent (new MoveInvalidEvent (currentPosition, direction));
 		}
+	}
+
+	public void ValidateRotation (Transform currentPosition, RotateDirection direction) {
+		bool[, ] initalGridState = Grid.Clone () as bool[, ];
+
+		FreeGridForAllBlocksInGroup (currentPosition);
+
+		bool isValid = AssertValidGroupRotation (currentPosition, direction);
+
+		if (isValid) {
+			EventManager.Instance.QueueEvent (new RotateValidEvent (currentPosition, direction));
+		} else {
+			Grid = initalGridState;
+			OccupyGridForAllBlocksInGroup (currentPosition);
+			EventManager.Instance.QueueEvent (new RotateInvalidEvent (currentPosition, direction));
+		}
+
+	}
+
+	public bool AssertValidGroupMove (Transform group, Vector3 to) {
+		// Get all child transforms
+		IEnumerable<Transform> transforms = group.Cast<Transform> ();
+
+		return transforms.Select (t => AssertValidMove (t.position, to)).All (valid => valid == true);
+	}
+
+	public bool AssertValidGroupRotation (Transform group, RotateDirection direction) {
+		// start by rotating the parent
+		group.RotateInDirection (direction);
+
+		// Get all child transforms
+		IEnumerable<Transform> transforms = group.Cast<Transform> ();
+
+		// Validate
+		bool isValid;
+		try {
+			isValid = transforms.Select (t => AssertValidTransform (t)).All (valid => valid == true);
+		} catch {
+			isValid = false;
+		}
+
+		// reset block group
+		RotateDirection opposite = direction == RotateDirection.Left ? RotateDirection.Right : RotateDirection.Left;
+		group.RotateInDirection (opposite);
+
+		return isValid;
 	}
 
 	public bool AssertValidMove (Vector3 from, Vector3 to) {
-		int x = (int) (from + to).x;
-		int y = (int) (from + to).y;
+		int x = (int) (from + to).Rounded ().x;
+		int y = (int) (from + to).Rounded ().y;
+		return AssertValid (x, y);
+	}
+
+	public bool AssertValidTransform (Transform block) {
+		int x = (int) block.position.Rounded ().x;
+		int y = (int) block.position.Rounded ().y;
 		return AssertValid (x, y);
 	}
 
 	public bool AssertValid (int x, int y) {
-		return grid[x, y] == false;
+		return
+		x >= 0 &&
+			y >= 0 &&
+			x < Grid.GetLength (0) &&
+			y < Grid.GetLength (1) &&
+			Grid[x, y] == false;
 	}
 
-	void SpawnInGrid (int x, int y) {
-		var cube = GameObject.CreatePrimitive (PrimitiveType.Cube);
-		cube.transform.position = new Vector3 (x, y, 0);
+	// void SpawnInGrid (int x, int y) {
+	// 	var cube = GameObject.CreatePrimitive (PrimitiveType.Cube);
+	// 	cube.transform.position = new Vector3 (x, y, 0);
+	// }
+
+	public void Move (Transform group) {
+		OccupyGridForAllBlocksInGroup (group);
 	}
 
-	void Move (Transform group) {
-		MarkgridAsOccupied (group.transform);
-	}
-
-	void MarkgridAsOccupied (Transform group) {
+	private void OccupyGridForAllBlocksInGroup (Transform group) {
 		foreach (Transform t in group) {
-			grid.SetValue (true, (int) t.position.x, (int) t.position.y);
+			int x = (int) t.position.Rounded ().x;
+			int y = (int) t.position.Rounded ().y;
+			Debug.LogFormat ("Setting true: {0}, {1}", x, y);
+			Grid.SetValue (true, x, y);
 		}
-		Inspect ();
+	}
+
+	private void FreeGridForAllBlocksInGroup (Transform group) {
+		foreach (Transform t in group) {
+			int x = (int) t.position.Rounded ().x;
+			int y = (int) t.position.Rounded ().y;
+			Debug.LogFormat ("Setting false: {0}, {1}", x, y);
+			Grid.SetValue (false, x, y);
+		}
 	}
 
 	// Print the grid as a series of 0s and 1s for debugging.
 	public void Inspect () {
 		var output = "";
-		for (int row = 0; row < width; row++) {
+		for (int row = Height; row >= 0; row--) {
 			output += "\n";
-			for (int col = 0; col < height; col++) {
-				var bit = grid[row, col] ? "1" : "0";
+			for (int col = 0; col < Width; col++) {
+				var bit = Grid[col, row] ? "1" : "0";
 				output += bit;
 			}
 		}
-		Debug.Log (output);
+
+		DebugCanvas canvas = GameObject.FindObjectOfType (typeof (DebugCanvas)) as DebugCanvas;
+		canvas.SetText (output);
 	}
 }

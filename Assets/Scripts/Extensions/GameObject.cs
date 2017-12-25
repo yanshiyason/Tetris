@@ -7,24 +7,37 @@ using UnityEngine.SceneManagement;
 namespace Tetris {
     namespace Extensions {
         public static class ExtendedGameObject {
-            public static void MoveDown (this Transform transform) {
-                transform.Translate (0, -1, 0, Space.World);
+            public static void Rounded (this Transform transform) {
+                foreach (Transform t in transform) {
+                    t.position = t.position.Rounded ();
+                }
             }
 
-            public static void MoveLeft (this Transform transform) {
-                transform.Translate (-1, 0, 0, Space.World);
+            public static void Move (this Transform transform, MoveDirection direction) {
+                switch (direction) {
+                    case MoveDirection.Down:
+                        transform.Translate (Vector3.down, Space.World);
+                        break;
+                    case MoveDirection.Left:
+                        transform.Translate (Vector3.left, Space.World);
+                        break;
+                    case MoveDirection.Right:
+                        transform.Translate (Vector3.right, Space.World);
+                        break;
+                }
+                transform.Rounded ();
             }
 
-            public static void MoveRight (this Transform transform) {
-                transform.Translate (1, 0, 0, Space.World);
-            }
-
-            public static void RotateRight (this Transform transform) {
-                transform.RotateAround (transform.position, Vector3.back, 90);
-            }
-
-            public static void RotateLeft (this Transform transform) {
-                transform.RotateAround (transform.position, Vector3.back, -90);
+            public static void RotateInDirection (this Transform transform, RotateDirection direction) {
+                switch (direction) {
+                    case RotateDirection.Left:
+                        transform.RotateAround (transform.position, Vector3.back, -90);
+                        break;
+                    case RotateDirection.Right:
+                        transform.RotateAround (transform.position, Vector3.back, 90);
+                        break;
+                }
+                transform.Rounded ();
             }
 
             public static void LogTransforms (this Transform transform) {

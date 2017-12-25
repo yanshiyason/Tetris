@@ -40,6 +40,12 @@ public class TetrisManagerTest {
 		Assert.True (component != null);
 	}
 
+	[UnityTest] public IEnumerator TetrisManager_Has_An_GridManagerComponent_Attached () {
+		yield return null;
+		var component = TetrisManager.instance.GetComponent<GridManager> ();
+		Assert.True (component != null);
+	}
+
 	[UnityTest] public IEnumerator TetrisManager_Has_A_PlayerInputListenerComponent_Attached () {
 		yield return null;
 		var component = TetrisManager.instance.GetComponent<PlayerInputListener> ();

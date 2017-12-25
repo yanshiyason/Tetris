@@ -5,88 +5,52 @@ using Tetris.Extensions;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class FallingBlockGroup : MonoBehaviour, IPlayerInputHandler {
-	UnityAction moveDownListener;
-	UnityAction moveLeftListener;
-	UnityAction moveRightListener;
-	UnityAction rotateLeftListener;
-	UnityAction rotateRightListener;
-
+public class FallingBlockGroup : MonoBehaviour {
 	Rigidbody rigidbody;
 
 	// Use this for initialization
 	void Awake () {
-		Debug.Log ("Awakening");
 		rigidbody = gameObject.AddComponent<Rigidbody> ();
 		rigidbody.useGravity = false;
 
-		moveDownListener = new UnityAction (MoveDown);
-		moveLeftListener = new UnityAction (MoveLeft);
-		moveRightListener = new UnityAction (MoveRight);
-		rotateLeftListener = new UnityAction (RotateLeft);
-		rotateRightListener = new UnityAction (RotateRight);
+		EventManager.Instance.AddListener<MoveValidEvent> (MoveValid);
+		EventManager.Instance.AddListener<MoveInvalidEvent> (MoveInvalid);
 
-		EventManager.RegisterListener ("MoveDownValid", moveDownListener);
-		EventManager.RegisterListener ("MoveLeftValid", moveLeftListener);
-		EventManager.RegisterListener ("MoveRightValid", moveRightListener);
-		EventManager.RegisterListener ("RotateLeftValid", rotateLeftListener);
-		EventManager.RegisterListener ("RotateRightValid", rotateRightListener);
+		EventManager.Instance.AddListener<RotateValidEvent> (RotateValid);
+		EventManager.Instance.AddListener<RotateInvalidEvent> (RotateInvalid);
 	}
 
 	void OnDestroy () {
-		EventManager.DestroyListener ("MoveDownValid", moveDownListener);
-		EventManager.DestroyListener ("MoveLeftValid", moveLeftListener);
-		EventManager.DestroyListener ("MoveRightValid", moveRightListener);
-		EventManager.DestroyListener ("RotateLeftValid", rotateLeftListener);
-		EventManager.DestroyListener ("RotateRightValid", rotateRightListener);
+		EventManager.Instance.RemoveListener<MoveValidEvent> (MoveValid);
+		EventManager.Instance.RemoveListener<MoveInvalidEvent> (MoveInvalid);
+
+		EventManager.Instance.RemoveListener<RotateValidEvent> (RotateValid);
+		EventManager.Instance.RemoveListener<RotateInvalidEvent> (RotateInvalid);
 	}
 
-	public void MoveDown () {
-		Debug.Log ("Received MoveDown()");
-		// transform
+	public void MoveValid (MoveValidEvent e) {
+		Debug.Log ("Move is valid");
+		transform.Move (e.Direction);
 
-		IEnumerable<Transform> transforms = transform.Cast<Transform> ();
-		foreach (var t in transforms) {
-			Debug.Log (t.position);
-			Debug.Log (TetrisManager.gridManager.AssertValidMove (t.position, new Vector3 (0, -1, 0)));
-		}
-
-		bool isValid =
-			transforms
-			.Select (t => TetrisManager.gridManager.AssertValidMove (
-				t.position, new Vector3 (0, -1, 0)))
-			.All (v => v == true);
-
-		if (isValid) {
-			Debug.Log ("Was Valid");
-			transform.MoveDown ();
-		} else {
-			Debug.Log ("Was Invalid");
-		}
-		transform.LogTransforms ();
+		TetrisManager.GridManager.Move (transform);
+		TetrisManager.GridManager.Inspect ();
 	}
 
-	public void MoveLeft () {
-		Debug.Log ("Received MoveLeft()");
-		transform.MoveLeft ();
-		transform.LogTransforms ();
+	public void MoveInvalid (MoveInvalidEvent e) {
+		Debug.Log ("Move is invalid");
 	}
 
-	public void MoveRight () {
-		Debug.Log ("Received MoveRight()");
-		transform.MoveRight ();
-		transform.LogTransforms ();
+	public void RotateValid (RotateValidEvent e) {
+		Debug.Log ("Rotation is valid");
+		transform.RotateInDirection (e.Direction);
+
+		TetrisManager.GridManager.Move (transform);
+
+		TetrisManager.GridManager.Inspect ();
 	}
 
-	public void RotateLeft () {
-		Debug.Log ("Received RotateLeft()");
-		transform.RotateLeft ();
-		transform.LogTransforms ();
+	public void RotateInvalid (RotateInvalidEvent e) {
+		Debug.Log ("Rotation is invalid");
 	}
 
-	public void RotateRight () {
-		Debug.Log ("Received RotateRight()");
-		transform.RotateRight ();
-		transform.LogTransforms ();
-	}
 }

@@ -5,25 +5,31 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class TetrisManager : MonoBehaviour {
-	private static TetrisManager _instance;
-	public static TetrisManager instance {
-		get { return _instance; }
-	}
-	private Object[] shapes;
-	public static GridManager gridManager;
+	public static TetrisManager instance { get { return _instance; } }
 	public static GameObject fallingBlockGroup;
+
+	private static TetrisManager _instance;
+	private Object[] shapes;
+	public static GridManager GridManager;
 
 	void Awake () {
 		SetupSingleton ();
-		shapes = Resources.LoadAll ("Prefabs/Shapes", typeof (GameObject));
-		gridManager = new GridManager ();
+		// Setup event system.
 		gameObject.AddComponent<EventManager> ();
+
+		shapes = Resources.LoadAll ("Prefabs/Shapes", typeof (GameObject));
+
+		// Setup GridManager
+		GridManager = gameObject.AddComponent<GridManager> ();
+		GridManager.Initialize (12, 24);
+
+		// Setup Input Listener
 		gameObject.AddComponent<PlayerInputListener> ();
 	}
 
 	// Use this for initialization
 	void Start () {
-		gridManager.Inspect ();
+		GridManager.Inspect ();
 	}
 
 	// Update is called once per frame
@@ -34,7 +40,10 @@ public class TetrisManager : MonoBehaviour {
 	}
 
 	void SpawnShape () {
-		var spawnPoint = new Vector3 (Mathf.Round (gridManager.width / 2), gridManager.height - 1, 0);
+		int x = (int) Mathf.Round (GridManager.Width / 2);
+		int y = GridManager.Height;
+		Debug.LogFormat ("Spawning x: {0}, y: {1}", x, y);
+		var spawnPoint = new Vector3 (x, y, 0);
 		var shapePrefab = (GameObject) shapes[Random.Range (0, shapes.Length)];
 		fallingBlockGroup = Instantiate (shapePrefab, spawnPoint, Quaternion.identity);
 		fallingBlockGroup.AddComponent<FallingBlockGroup> ();
