@@ -7,13 +7,14 @@ public class GridTest {
 
 	[Test]
 	public void Grid_Initializes_With_The_Correct_Amount_Of_Cells () {
+		var heightPadding = 10;
 		var width = 24;
 		var height = 48;
 		var totalCells = height * width;
 		var gridManager = new GridManager ();
-		gridManager.Initialize (24, 48);
-		Assert.AreEqual (gridManager.Grid.GetLength (0), 24);
-		Assert.AreEqual (gridManager.Grid.GetLength (1), 48);
+		gridManager.Initialize (width, height);
+		Assert.AreEqual (gridManager.Grid.GetLength (0), width);
+		Assert.AreEqual (gridManager.Grid.GetLength (1), height + heightPadding);
 	}
 
 	[Test]

@@ -31,10 +31,10 @@ namespace Tetris {
             public static void RotateInDirection (this Transform transform, RotateDirection direction) {
                 switch (direction) {
                     case RotateDirection.Left:
-                        transform.RotateAround (transform.position, Vector3.back, -90);
+                        transform.Rotate (0, 0, -90);
                         break;
                     case RotateDirection.Right:
-                        transform.RotateAround (transform.position, Vector3.back, 90);
+                        transform.Rotate (0, 0, 90);
                         break;
                 }
                 transform.Rounded ();

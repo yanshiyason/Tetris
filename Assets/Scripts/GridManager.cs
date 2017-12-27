@@ -13,39 +13,55 @@ public class GridManager : MonoBehaviour {
 
 	private int heightWithPadding;
 
+	private Queue<GameEvent> MoveEventsQueue;
+
 	public void Initialize (int width = 12, int height = 24) {
 		Width = width;
 		Height = height;
 		heightWithPadding = height + 10;
 
 		Grid = new bool[width, heightWithPadding];
+
+		MoveEventsQueue = new Queue<GameEvent> ();
 	}
 
 	void Awake () {
-		EventManager.Instance.AddListener<MoveBlockGroupEvent> (ValidateMoveHandler);
-		EventManager.Instance.AddListener<RotateBlockGroupEvent> (ValidateRotationHandler);
+		EventManager.Instance.AddListener<MoveTetrominoEvent> (MoveTetrominoEventHandler);
+		EventManager.Instance.AddListener<RotateTetrominoEvent> (RotateTetrominoEventHandler);
 	}
 
-	private void ValidateMoveHandler (MoveBlockGroupEvent e) {
+	void Update () {
+		ProcessQueueItems ();
+	}
+
+	private void ValidateEvent (MoveTetrominoEvent e) {
 		ValidateMove (e.CurrentPosition, e.Direction);
 	}
 
-	private void ValidateRotationHandler (RotateBlockGroupEvent e) {
+	private void ValidateEvent (RotateTetrominoEvent e) {
 		ValidateRotation (e.CurrentPosition, e.Direction);
+	}
+
+	private void MoveTetrominoEventHandler (MoveTetrominoEvent e) {
+		MoveEventsQueue.Enqueue (e);
+	}
+
+	private void RotateTetrominoEventHandler (RotateTetrominoEvent e) {
+		MoveEventsQueue.Enqueue (e);
 	}
 
 	public void ValidateMove (Transform currentPosition, MoveDirection direction) {
 		bool[, ] initalGridState = Grid.Clone () as bool[, ];
 
-		FreeGridForAllBlocksInGroup (currentPosition);
+		FreeGridForAllBlocksInTetromino (currentPosition);
 
-		bool isValid = AssertValidGroupMove (currentPosition, DirectionToVector.For (direction));
+		bool isValid = AssertValidTetrominoMove (currentPosition, DirectionToVector.For (direction));
 
 		if (isValid) {
 			EventManager.Instance.QueueEvent (new MoveValidEvent (currentPosition, direction));
 		} else {
 			Grid = initalGridState;
-			OccupyGridForAllBlocksInGroup (currentPosition);
+			OccupyGridForAllBlocksInTetromino (currentPosition);
 			EventManager.Instance.QueueEvent (new MoveInvalidEvent (currentPosition, direction));
 		}
 	}
@@ -53,45 +69,45 @@ public class GridManager : MonoBehaviour {
 	public void ValidateRotation (Transform currentPosition, RotateDirection direction) {
 		bool[, ] initalGridState = Grid.Clone () as bool[, ];
 
-		FreeGridForAllBlocksInGroup (currentPosition);
+		FreeGridForAllBlocksInTetromino (currentPosition);
 
-		bool isValid = AssertValidGroupRotation (currentPosition, direction);
+		bool isValid = AssertValidTetrominoRotation (currentPosition, direction);
 
 		if (isValid) {
 			EventManager.Instance.QueueEvent (new RotateValidEvent (currentPosition, direction));
 		} else {
 			Grid = initalGridState;
-			OccupyGridForAllBlocksInGroup (currentPosition);
+			OccupyGridForAllBlocksInTetromino (currentPosition);
 			EventManager.Instance.QueueEvent (new RotateInvalidEvent (currentPosition, direction));
 		}
 
 	}
 
-	public bool AssertValidGroupMove (Transform group, Vector3 to) {
+	public bool AssertValidTetrominoMove (Transform tetromino, Vector3 to) {
 		// Get all child transforms
-		IEnumerable<Transform> transforms = group.Cast<Transform> ();
+		IEnumerable<Transform> transforms = tetromino.Cast<Transform> ();
 
 		return transforms.Select (t => AssertValidMove (t.position, to)).All (valid => valid == true);
 	}
 
-	public bool AssertValidGroupRotation (Transform group, RotateDirection direction) {
+	public bool AssertValidTetrominoRotation (Transform tetromino, RotateDirection direction) {
 		// start by rotating the parent
-		group.RotateInDirection (direction);
+		tetromino.RotateInDirection (direction);
 
 		// Get all child transforms
-		IEnumerable<Transform> transforms = group.Cast<Transform> ();
+		IEnumerable<Transform> transforms = tetromino.Cast<Transform> ();
 
 		// Validate
 		bool isValid;
 		try {
-			isValid = transforms.Select (t => AssertValidTransform (t)).All (valid => valid == true);
+			isValid = transforms.Select (t => AssertValidPosition (t.position)).All (valid => valid == true);
 		} catch {
 			isValid = false;
 		}
 
-		// reset block group
+		// reset block tetromino
 		RotateDirection opposite = direction == RotateDirection.Left ? RotateDirection.Right : RotateDirection.Left;
-		group.RotateInDirection (opposite);
+		tetromino.RotateInDirection (opposite);
 
 		return isValid;
 	}
@@ -102,9 +118,9 @@ public class GridManager : MonoBehaviour {
 		return AssertValid (x, y);
 	}
 
-	public bool AssertValidTransform (Transform block) {
-		int x = (int) block.position.Rounded ().x;
-		int y = (int) block.position.Rounded ().y;
+	public bool AssertValidPosition (Vector3 position) {
+		int x = (int) position.Rounded ().x;
+		int y = (int) position.Rounded ().y;
 		return AssertValid (x, y);
 	}
 
@@ -113,21 +129,15 @@ public class GridManager : MonoBehaviour {
 		x >= 0 &&
 			y >= 0 &&
 			x < Grid.GetLength (0) &&
-			y < Grid.GetLength (1) &&
 			Grid[x, y] == false;
 	}
 
-	// void SpawnInGrid (int x, int y) {
-	// 	var cube = GameObject.CreatePrimitive (PrimitiveType.Cube);
-	// 	cube.transform.position = new Vector3 (x, y, 0);
-	// }
-
-	public void Move (Transform group) {
-		OccupyGridForAllBlocksInGroup (group);
+	public void Move (Transform tetromino) {
+		OccupyGridForAllBlocksInTetromino (tetromino);
 	}
 
-	private void OccupyGridForAllBlocksInGroup (Transform group) {
-		foreach (Transform t in group) {
+	private void OccupyGridForAllBlocksInTetromino (Transform tetromino) {
+		foreach (Transform t in tetromino) {
 			int x = (int) t.position.Rounded ().x;
 			int y = (int) t.position.Rounded ().y;
 			Debug.LogFormat ("Setting true: {0}, {1}", x, y);
@@ -135,12 +145,29 @@ public class GridManager : MonoBehaviour {
 		}
 	}
 
-	private void FreeGridForAllBlocksInGroup (Transform group) {
-		foreach (Transform t in group) {
+	private void FreeGridForAllBlocksInTetromino (Transform tetromino) {
+		foreach (Transform t in tetromino) {
 			int x = (int) t.position.Rounded ().x;
 			int y = (int) t.position.Rounded ().y;
 			Debug.LogFormat ("Setting false: {0}, {1}", x, y);
 			Grid.SetValue (false, x, y);
+		}
+	}
+
+	private void ProcessQueueItems () {
+		if (MoveEventsQueue.Count == 0) {
+			return;
+		}
+
+		GameEvent e = MoveEventsQueue.Dequeue ();
+
+		switch (e.GetType ().Name) {
+			case "MoveTetrominoEvent":
+				ValidateEvent ((MoveTetrominoEvent) e);
+				break;
+			case "RotateTetrominoEvent":
+				ValidateEvent ((RotateTetrominoEvent) e);
+				break;
 		}
 	}
 

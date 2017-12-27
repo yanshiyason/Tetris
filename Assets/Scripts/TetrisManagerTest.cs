@@ -28,27 +28,21 @@ public class TetrisManagerTest {
 		Assert.True (instance2 == null);
 	}
 
-	[UnityTest] public IEnumerator TetrisManager_FallingBlockGroup_IsInstantiated_AfterFirstFrame () {
+	[UnityTest] public IEnumerator TetrisManager_Tetromino_IsInstantiated_AfterFirstFrame () {
 		yield return null;
 
-		Assert.True (TetrisManager.fallingBlockGroup != null);
+		Assert.True (TetrisManager.Instance.CurrentlyFallingTetromino != null);
 	}
 
 	[UnityTest] public IEnumerator TetrisManager_Has_An_EventManagerComponent_Attached () {
 		yield return null;
-		var component = TetrisManager.instance.GetComponent<EventManager> ();
+		var component = TetrisManager.Instance.GetComponent<EventManager> ();
 		Assert.True (component != null);
 	}
 
 	[UnityTest] public IEnumerator TetrisManager_Has_An_GridManagerComponent_Attached () {
 		yield return null;
-		var component = TetrisManager.instance.GetComponent<GridManager> ();
-		Assert.True (component != null);
-	}
-
-	[UnityTest] public IEnumerator TetrisManager_Has_A_PlayerInputListenerComponent_Attached () {
-		yield return null;
-		var component = TetrisManager.instance.GetComponent<PlayerInputListener> ();
+		var component = TetrisManager.Instance.GetComponent<GridManager> ();
 		Assert.True (component != null);
 	}
 

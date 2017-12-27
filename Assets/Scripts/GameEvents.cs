@@ -6,21 +6,21 @@ public class GameEvent {
 
 }
 
-public class MoveBlockGroupEvent : GameEvent {
+public class MoveTetrominoEvent : GameEvent {
     public Transform CurrentPosition { get; private set; }
     public MoveDirection Direction { get; private set; }
 
-    public MoveBlockGroupEvent (Transform currentPosition, MoveDirection direction) {
+    public MoveTetrominoEvent (Transform currentPosition, MoveDirection direction) {
         CurrentPosition = currentPosition;
         Direction = direction;
     }
 }
 
-public class RotateBlockGroupEvent : GameEvent {
+public class RotateTetrominoEvent : GameEvent {
     public Transform CurrentPosition { get; private set; }
     public RotateDirection Direction { get; private set; }
 
-    public RotateBlockGroupEvent (Transform currentPosition, RotateDirection direction) {
+    public RotateTetrominoEvent (Transform currentPosition, RotateDirection direction) {
         CurrentPosition = currentPosition;
         Direction = direction;
     }
@@ -64,4 +64,8 @@ public class RotateInvalidEvent : GameEvent {
         CurrentPosition = currentPosition;
         Direction = direction;
     }
+}
+
+public class SpawnTetrominoEvent : GameEvent {
+    public SpawnTetrominoEvent () { }
 }

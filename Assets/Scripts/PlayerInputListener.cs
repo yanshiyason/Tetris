@@ -6,8 +6,14 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 class PlayerInputListener : MonoBehaviour {
-	void Start () {
+	Tetromino tetromino;
 
+	void Awake () {
+		tetromino = GetComponentInParent<Tetromino> ();
+	}
+
+	void Start () {
+		StartCoroutine (MoveBlockDownEachInterval ());
 	}
 
 	void Update () {
@@ -16,15 +22,40 @@ class PlayerInputListener : MonoBehaviour {
 
 	void ListenToPlayerInput () {
 		if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.RightArrow)) {
-			EventManager.Instance.QueueEvent (new RotateBlockGroupEvent (TetrisManager.fallingBlockGroup.transform, RotateDirection.Right));
+			RotateLeft ();
 		} else if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.LeftArrow)) {
-			EventManager.Instance.QueueEvent (new RotateBlockGroupEvent (TetrisManager.fallingBlockGroup.transform, RotateDirection.Left));
+			RotateRight ();
 		} else if (Input.GetKeyDown (KeyCode.LeftArrow)) {
-			EventManager.Instance.QueueEvent (new MoveBlockGroupEvent (TetrisManager.fallingBlockGroup.transform, MoveDirection.Left));
+			MoveLeft ();
 		} else if (Input.GetKeyDown (KeyCode.RightArrow)) {
-			EventManager.Instance.QueueEvent (new MoveBlockGroupEvent (TetrisManager.fallingBlockGroup.transform, MoveDirection.Right));
+			MoveRight ();
 		} else if (Input.GetKeyDown (KeyCode.DownArrow)) {
-			EventManager.Instance.QueueEvent (new MoveBlockGroupEvent (TetrisManager.fallingBlockGroup.transform, MoveDirection.Down));
+			MoveDown ();
+		}
+	}
+
+	void MoveDown () {
+		EventManager.Instance.QueueEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Down));
+	}
+
+	void MoveLeft () {
+		EventManager.Instance.QueueEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Left));
+	}
+	void MoveRight () {
+		EventManager.Instance.QueueEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Right));
+	}
+
+	void RotateLeft () {
+		EventManager.Instance.QueueEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Right));
+	}
+	void RotateRight () {
+		EventManager.Instance.QueueEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Left));
+	}
+
+	IEnumerator MoveBlockDownEachInterval () {
+		while (true) {
+			yield return new WaitForSeconds (1);
+			MoveDown ();
 		}
 	}
 }

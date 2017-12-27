@@ -18,11 +18,11 @@ public class EventManagerTest {
 
 	bool moveBlockHandlerCalled;
 	[UnityTest] public IEnumerator EventManager_Can_Add_Different_Events () {
-		EventManager.Instance.AddListener<MoveBlockGroupEvent> (MoveBlockHandler);
+		EventManager.Instance.AddListener<MoveTetrominoEvent> (MoveBlockHandler);
 
 		moveBlockHandlerCalled = false;
 
-		EventManager.Instance.TriggerEvent (new MoveBlockGroupEvent (gameManager.transform, MoveDirection.Down));
+		EventManager.Instance.TriggerEvent (new MoveTetrominoEvent (gameManager.transform, MoveDirection.Down));
 
 		yield return null;
 
@@ -31,17 +31,17 @@ public class EventManagerTest {
 
 	[UnityTest] public IEnumerator EventManager_Can_Remove_A_Listener () {
 
-		EventManager.Instance.AddListener<MoveBlockGroupEvent> (MoveBlockHandler);
+		EventManager.Instance.AddListener<MoveTetrominoEvent> (MoveBlockHandler);
 
 		yield return null;
 
-		EventManager.Instance.RemoveListener<MoveBlockGroupEvent> (MoveBlockHandler);
+		EventManager.Instance.RemoveListener<MoveTetrominoEvent> (MoveBlockHandler);
 
 		yield return null;
 
 		moveBlockHandlerCalled = false;
 
-		EventManager.Instance.TriggerEvent (new MoveBlockGroupEvent (gameManager.transform, MoveDirection.Down));
+		EventManager.Instance.TriggerEvent (new MoveTetrominoEvent (gameManager.transform, MoveDirection.Down));
 
 		Assert.False (moveBlockHandlerCalled);
 	}
@@ -55,7 +55,7 @@ public class EventManagerTest {
 		yield return null;
 	}
 
-	public void MoveBlockHandler (MoveBlockGroupEvent e) {
+	public void MoveBlockHandler (MoveTetrominoEvent e) {
 		moveBlockHandlerCalled = true;
 	}
 }
