@@ -7,13 +7,25 @@ using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 public class GridManager : MonoBehaviour {
-	public bool[, ] Grid;
 	public int Width;
 	public int Height;
+
+	public bool[, ] Grid;
+
+	private static GridManager _instance;
 
 	private int heightWithPadding;
 
 	private Queue<GameEvent> MoveEventsQueue;
+
+	public static GridManager Instance {
+		get {
+			if (_instance == null) {
+				_instance = GameObject.FindObjectOfType (typeof (GridManager)) as GridManager;
+			}
+			return _instance;
+		}
+	}
 
 	public void Initialize (int width = 12, int height = 24) {
 		Width = width;
@@ -23,9 +35,7 @@ public class GridManager : MonoBehaviour {
 		Grid = new bool[width, heightWithPadding];
 
 		MoveEventsQueue = new Queue<GameEvent> ();
-	}
 
-	void Awake () {
 		EventManager.Instance.AddListener<MoveTetrominoEvent> (MoveTetrominoEventHandler);
 		EventManager.Instance.AddListener<RotateTetrominoEvent> (RotateTetrominoEventHandler);
 	}
@@ -34,20 +44,57 @@ public class GridManager : MonoBehaviour {
 		ProcessQueueItems ();
 	}
 
-	private void ValidateEvent (MoveTetrominoEvent e) {
-		ValidateMove (e.CurrentPosition, e.Direction);
-	}
-
-	private void ValidateEvent (RotateTetrominoEvent e) {
-		ValidateRotation (e.CurrentPosition, e.Direction);
-	}
-
 	private void MoveTetrominoEventHandler (MoveTetrominoEvent e) {
 		MoveEventsQueue.Enqueue (e);
 	}
 
 	private void RotateTetrominoEventHandler (RotateTetrominoEvent e) {
 		MoveEventsQueue.Enqueue (e);
+	}
+
+	private void ProcessQueueItems () {
+		if (MoveEventsQueue.Count == 0) {
+			return;
+		}
+
+		GameEvent e = MoveEventsQueue.Dequeue ();
+
+		switch (e.GetType ().Name) {
+			case "MoveTetrominoEvent":
+				ValidateEvent ((MoveTetrominoEvent) e);
+				break;
+			case "RotateTetrominoEvent":
+				ValidateEvent ((RotateTetrominoEvent) e);
+				break;
+		}
+	}
+
+	// Print the grid as a series of 0s and 1s for debugging.
+	public void Inspect () {
+		var output = "";
+		for (int row = Height; row >= 0; row--) {
+			output += "\n";
+			for (int col = 0; col < Width; col++) {
+				var bit = Grid[col, row] ? "1" : "0";
+				output += bit;
+			}
+		}
+
+		DebugCanvas canvas = GameObject.FindObjectOfType (typeof (DebugCanvas)) as DebugCanvas;
+		canvas.SetText (output);
+	}
+
+	// TODO: move this to a separate class.
+	// **************
+	// Validate moves
+	// **************
+
+	public void ValidateEvent (MoveTetrominoEvent e) {
+		ValidateMove (e.CurrentPosition, e.Direction);
+	}
+
+	public void ValidateEvent (RotateTetrominoEvent e) {
+		ValidateRotation (e.CurrentPosition, e.Direction);
 	}
 
 	public void ValidateMove (Transform currentPosition, MoveDirection direction) {
@@ -152,37 +199,5 @@ public class GridManager : MonoBehaviour {
 			Debug.LogFormat ("Setting false: {0}, {1}", x, y);
 			Grid.SetValue (false, x, y);
 		}
-	}
-
-	private void ProcessQueueItems () {
-		if (MoveEventsQueue.Count == 0) {
-			return;
-		}
-
-		GameEvent e = MoveEventsQueue.Dequeue ();
-
-		switch (e.GetType ().Name) {
-			case "MoveTetrominoEvent":
-				ValidateEvent ((MoveTetrominoEvent) e);
-				break;
-			case "RotateTetrominoEvent":
-				ValidateEvent ((RotateTetrominoEvent) e);
-				break;
-		}
-	}
-
-	// Print the grid as a series of 0s and 1s for debugging.
-	public void Inspect () {
-		var output = "";
-		for (int row = Height; row >= 0; row--) {
-			output += "\n";
-			for (int col = 0; col < Width; col++) {
-				var bit = Grid[col, row] ? "1" : "0";
-				output += bit;
-			}
-		}
-
-		DebugCanvas canvas = GameObject.FindObjectOfType (typeof (DebugCanvas)) as DebugCanvas;
-		canvas.SetText (output);
 	}
 }

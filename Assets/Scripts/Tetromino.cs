@@ -15,15 +15,31 @@ public class Tetromino : MonoBehaviour {
 
 	public TetrominoState State;
 	private PlayerInputListener PlayerInputListener;
+	private GridManager GridManager;
+
+	private static Color[] TetrominoColors = { Color.blue, Color.red, Color.green, Color.yellow, Color.magenta };
 
 	// Use this for initialization
 	void Awake () {
+		SetRandomColor ();
 		State = TetrominoState.falling;
+
+		GridManager = FindObjectOfType<GridManager> ();
 
 		// Setup Input Listener
 		PlayerInputListener = gameObject.AddComponent<PlayerInputListener> ();
 
 		StartListeningForMovementEvents ();
+	}
+
+	void SetRandomColor () {
+		var i = Random.Range (0, TetrominoColors.Length);
+		var color = TetrominoColors[i];
+
+		var renderers = gameObject.GetComponentsInChildren<Renderer> ();
+		foreach (Renderer renderer in renderers) {
+			renderer.material.color = color;
+		}
 	}
 
 	void StartListeningForMovementEvents () {
@@ -46,8 +62,8 @@ public class Tetromino : MonoBehaviour {
 		Debug.Log ("Move is valid");
 		transform.Move (e.Direction);
 
-		TetrisManager.GridManager.Move (transform);
-		TetrisManager.GridManager.Inspect ();
+		GridManager.Instance.Move (transform);
+		GridManager.Instance.Inspect ();
 	}
 
 	public void MoveInvalid (MoveInvalidEvent e) {
@@ -68,9 +84,9 @@ public class Tetromino : MonoBehaviour {
 
 		Rotate (e.Direction);
 
-		TetrisManager.GridManager.Move (transform);
+		GridManager.Instance.Move (transform);
 
-		TetrisManager.GridManager.Inspect ();
+		GridManager.Instance.Inspect ();
 	}
 
 	public void RotateInvalid (RotateInvalidEvent e) {
