@@ -8,6 +8,9 @@ using UnityEngine.EventSystems;
 class PlayerInputListener : MonoBehaviour {
 	Tetromino tetromino;
 
+	static float keyPressDelay = 0.05f;
+	static float lastKeyPressAt;
+
 	void Awake () {
 		tetromino = GetComponentInParent<Tetromino> ();
 	}
@@ -17,17 +20,15 @@ class PlayerInputListener : MonoBehaviour {
 	}
 
 	void Update () {
-		ListenToPlayerInput ();
+		GetPlayerInput ();
 	}
 
-	void ListenToPlayerInput () {
-		if (Input.GetKey (KeyCode.LeftShift)) {
-			if (Input.GetKeyDown (KeyCode.RightArrow)) {
-				RotateLeft ();
-			} else if (Input.GetKeyDown (KeyCode.LeftArrow)) {
-				RotateRight ();
-			}
-		} else if (Input.GetKeyDown (KeyCode.LeftArrow)) {
+	void GetPlayerInput () {
+		if (Time.time - lastKeyPressAt < keyPressDelay) {
+			return;
+		}
+
+		if (Input.GetKeyDown (KeyCode.LeftArrow)) {
 			MoveLeft ();
 		} else if (Input.GetKeyDown (KeyCode.RightArrow)) {
 			MoveRight ();
@@ -39,7 +40,13 @@ class PlayerInputListener : MonoBehaviour {
 			MoveLeft ();
 		} else if (Input.GetKey (KeyCode.RightArrow)) {
 			MoveRight ();
+		} else if (Input.GetKeyDown (KeyCode.UpArrow)) {
+			RotateLeft ();
+		} else {
+			return;
 		}
+
+		lastKeyPressAt = Time.time;
 	}
 
 	void MoveDown () {
