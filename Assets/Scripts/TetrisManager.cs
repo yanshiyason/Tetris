@@ -11,7 +11,9 @@ public class TetrisManager : MonoBehaviour {
 	GridManager GridManager;
 
 	private static TetrisManager _instance;
-	private Object[] shapes;
+	private Object[] Shapes;
+
+	public static GameObject Explosion;
 
 	public GameObject CurrentlyFallingTetromino;
 
@@ -20,7 +22,8 @@ public class TetrisManager : MonoBehaviour {
 		// Setup event system.
 		gameObject.AddComponent<EventManager> ();
 
-		shapes = Resources.LoadAll ("Prefabs/Shapes", typeof (GameObject));
+		Shapes = Resources.LoadAll ("Prefabs/Shapes", typeof (GameObject));
+		Explosion = Resources.Load ("Prefabs/Explosion", typeof (GameObject)) as GameObject;
 
 		// Setup GridManager
 		GridManager = FindObjectOfType<GridManager> ();
@@ -54,7 +57,7 @@ public class TetrisManager : MonoBehaviour {
 	}
 
 	void SpawnTetromino (Vector3 position) {
-		var shapePrefab = (GameObject) shapes[Random.Range (0, shapes.Length)];
+		var shapePrefab = (GameObject) Shapes[Random.Range (0, Shapes.Length)];
 		CurrentlyFallingTetromino = Instantiate (shapePrefab, position, Quaternion.identity);
 	}
 

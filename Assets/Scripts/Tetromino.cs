@@ -17,8 +17,6 @@ public class Tetromino : MonoBehaviour {
 	private PlayerInputListener PlayerInputListener;
 	private GridManager GridManager;
 
-	private static Color[] TetrominoColors = { Color.blue, Color.red, Color.green, Color.yellow, Color.magenta };
-
 	// Use this for initialization
 	void Awake () {
 		SetRandomColor ();
@@ -33,12 +31,11 @@ public class Tetromino : MonoBehaviour {
 	}
 
 	void SetRandomColor () {
-		var i = Random.Range (0, TetrominoColors.Length);
-		var color = TetrominoColors[i];
+		var i = Random.Range (0, Block.Colors.Length);
+		var color = Block.Colors[i];
 
-		var renderers = gameObject.GetComponentsInChildren<Renderer> ();
-		foreach (Renderer renderer in renderers) {
-			renderer.material.color = color;
+		foreach (Transform block in gameObject.transform) {
+			block.gameObject.GetComponent<Block> ().Color = color;
 		}
 	}
 

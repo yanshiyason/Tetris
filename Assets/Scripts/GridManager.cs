@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
-public class Grid {
+public class Grid : MonoBehaviour {
 	public Transform[, ] Value;
 	public int Width;
 	public int Height;
@@ -50,7 +51,7 @@ public class Grid {
 		this [x, y] = null;
 	}
 
-	public void DestroyRow (int rowIndex) {
+	public IEnumerator DestroyRow (int rowIndex) {
 
 		// Destroy row
 		for (int col = 0; col < Width; col++) {
@@ -58,10 +59,27 @@ public class Grid {
 				continue;
 			}
 
-			GameObject.Destroy (this [col, rowIndex].gameObject);
+			Debug.LogFormat ("Calling destroy loop {0}, {1}", col, rowIndex);
+			yield return new WaitForSeconds (0.05f);
+
+			// Show explosion
+			var explosion = Instantiate (TetrisManager.Explosion, this [col, rowIndex].position, Quaternion.identity);
+			var ps = explosion.GetComponent<ParticleSystem> ();
+			var main = ps.main;
+			main.startColor = this [col, rowIndex].GetComponent<Block> ().Color;
+			DestroyObject (this [col, rowIndex].gameObject);
+			ps.Play ();
+			DestroyObject (ps.gameObject, ps.main.duration);
+
 			this [col, rowIndex] = null;
 		}
 
+		Debug.LogFormat ("Calling LowerAllRowsFrom");
+
+		LowerAllRowsFrom (rowIndex);
+	}
+
+	void LowerAllRowsFrom (int rowIndex) {
 		// Lower each block by 1 row.
 		for (int row = rowIndex + 1; row < Height; row++) {
 			for (int col = 0; col < Width; col++) {
@@ -149,13 +167,12 @@ public class GridManager : MonoBehaviour {
 				break;
 		}
 	}
-
 	private void RowsFullEventHandler (RowsFullEvent e) {
 		var sorted = e.RowIndexes.Cast<int> ().OrderByDescending (i => i);
 
 		foreach (int i in sorted) {
 			Debug.LogFormat ("Destroying row {0}", i);
-			Grid.DestroyRow (i);
+			StartCoroutine (Grid.DestroyRow (i));
 		}
 	}
 
