@@ -21,16 +21,24 @@ class PlayerInputListener : MonoBehaviour {
 	}
 
 	void ListenToPlayerInput () {
-		if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.RightArrow)) {
-			RotateLeft ();
-		} else if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.LeftArrow)) {
-			RotateRight ();
+		if (Input.GetKey (KeyCode.LeftShift)) {
+			if (Input.GetKeyDown (KeyCode.RightArrow)) {
+				RotateLeft ();
+			} else if (Input.GetKeyDown (KeyCode.LeftArrow)) {
+				RotateRight ();
+			}
 		} else if (Input.GetKeyDown (KeyCode.LeftArrow)) {
 			MoveLeft ();
 		} else if (Input.GetKeyDown (KeyCode.RightArrow)) {
 			MoveRight ();
 		} else if (Input.GetKeyDown (KeyCode.DownArrow)) {
 			MoveDown ();
+		} else if (Input.GetKey (KeyCode.DownArrow)) {
+			MoveDown ();
+		} else if (Input.GetKey (KeyCode.LeftArrow)) {
+			MoveLeft ();
+		} else if (Input.GetKey (KeyCode.RightArrow)) {
+			MoveRight ();
 		}
 	}
 

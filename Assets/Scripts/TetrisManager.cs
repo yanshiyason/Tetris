@@ -31,8 +31,7 @@ public class TetrisManager : MonoBehaviour {
 
 		GridManager.Initialize (10, 22);
 
-		// Listen for Spawn Tetromino events
-		EventManager.Instance.AddListener<SpawnTetrominoEvent> (SpawnTetrominoEventHandler);
+		EventManager.Instance.AddListener<TetrominoLandedEvent> (TetrominoLandedEventHandler);
 
 		SpawnTetromino ();
 	}
@@ -42,10 +41,7 @@ public class TetrisManager : MonoBehaviour {
 		DrawWallsAroundTetrisGrid ();
 	}
 
-	// Update is called once per frame
-	void Update () { }
-
-	void SpawnTetrominoEventHandler (SpawnTetrominoEvent _) {
+	void TetrominoLandedEventHandler (TetrominoLandedEvent e) {
 		SpawnTetromino ();
 	}
 

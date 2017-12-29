@@ -6,11 +6,84 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
+public class Grid {
+	public Transform[, ] Value;
+	public int Width;
+	public int Height;
+
+	public Transform this [int col, int row] {
+		get { return Value[col, row]; }
+		set { Value.SetValue (value, col, row); }
+	}
+
+	public Grid (int width, int height) {
+		Width = width;
+		Height = height;
+		Value = new Transform[width, height];
+	}
+
+	public void Move (Transform tetromino) {
+		OccupyGridForTetromino (tetromino);
+	}
+
+	public void OccupyGridForTetromino (Transform tetromino) {
+		foreach (Transform block in tetromino) {
+			OccupyGridForSingleBlock (block);
+		}
+	}
+
+	public void OccupyGridForSingleBlock (Transform block) {
+		int x = (int) block.position.Rounded ().x;
+		int y = (int) block.position.Rounded ().y;
+		this [x, y] = block;
+	}
+
+	public void FreeGridForTetromino (Transform tetromino) {
+		foreach (Transform block in tetromino) {
+			FreeGridForSingleBlock (block);
+		}
+	}
+
+	public void FreeGridForSingleBlock (Transform block) {
+		int x = (int) block.position.Rounded ().x;
+		int y = (int) block.position.Rounded ().y;
+		this [x, y] = null;
+	}
+
+	public void DestroyRow (int rowIndex) {
+
+		// Destroy row
+		for (int col = 0; col < Width; col++) {
+			if (this [col, rowIndex] == null) {
+				continue;
+			}
+
+			GameObject.Destroy (this [col, rowIndex].gameObject);
+			this [col, rowIndex] = null;
+		}
+
+		// Lower each block by 1 row.
+		for (int row = rowIndex + 1; row < Height; row++) {
+			for (int col = 0; col < Width; col++) {
+				if (this [col, row] == null) {
+					continue;
+				}
+
+				var block = this [col, row];
+
+				FreeGridForSingleBlock (block);
+				block.Move (MoveDirection.Down);
+				OccupyGridForSingleBlock (block);
+			}
+		}
+	}
+}
+
 public class GridManager : MonoBehaviour {
 	public int Width;
 	public int Height;
 
-	public bool[, ] Grid;
+	public Grid Grid;
 
 	private static GridManager _instance;
 
@@ -32,40 +105,57 @@ public class GridManager : MonoBehaviour {
 		Height = height;
 		heightWithPadding = height + 10;
 
-		Grid = new bool[width, heightWithPadding];
+		Grid = new Grid (width, heightWithPadding);
 
 		MoveEventsQueue = new Queue<GameEvent> ();
 
-		EventManager.Instance.AddListener<MoveTetrominoEvent> (MoveTetrominoEventHandler);
-		EventManager.Instance.AddListener<RotateTetrominoEvent> (RotateTetrominoEventHandler);
+		EventManager.Instance.AddListener<MoveTetrominoEvent> (EnqueueMoveTetrominoEvent);
+		EventManager.Instance.AddListener<RotateTetrominoEvent> (EnqueueRotateTetrominoEvent);
+		EventManager.Instance.AddListener<TetrominoLandedEvent> (EnqueueTetrominoLandedEvent);
+		EventManager.Instance.AddListener<RowsFullEvent> (RowsFullEventHandler);
 	}
 
 	void Update () {
-		ProcessQueueItems ();
+
+		if (MoveEventsQueue.Count () > 0) {
+			ProcessQueueItems ();
+		}
 	}
 
-	private void MoveTetrominoEventHandler (MoveTetrominoEvent e) {
+	private void EnqueueMoveTetrominoEvent (MoveTetrominoEvent e) {
 		MoveEventsQueue.Enqueue (e);
 	}
 
-	private void RotateTetrominoEventHandler (RotateTetrominoEvent e) {
+	private void EnqueueRotateTetrominoEvent (RotateTetrominoEvent e) {
+		MoveEventsQueue.Enqueue (e);
+	}
+
+	private void EnqueueTetrominoLandedEvent (TetrominoLandedEvent e) {
 		MoveEventsQueue.Enqueue (e);
 	}
 
 	private void ProcessQueueItems () {
-		if (MoveEventsQueue.Count == 0) {
-			return;
-		}
-
 		GameEvent e = MoveEventsQueue.Dequeue ();
 
 		switch (e.GetType ().Name) {
 			case "MoveTetrominoEvent":
-				ValidateEvent ((MoveTetrominoEvent) e);
+				ValidateMoveEventHandler ((MoveTetrominoEvent) e);
 				break;
 			case "RotateTetrominoEvent":
-				ValidateEvent ((RotateTetrominoEvent) e);
+				ValidateRotationEventHandler ((RotateTetrominoEvent) e);
 				break;
+			case "TetrominoLandedEvent":
+				TetrominoLandedEventHandler ((TetrominoLandedEvent) e);
+				break;
+		}
+	}
+
+	private void RowsFullEventHandler (RowsFullEvent e) {
+		var sorted = e.RowIndexes.Cast<int> ().OrderByDescending (i => i);
+
+		foreach (int i in sorted) {
+			Debug.LogFormat ("Destroying row {0}", i);
+			Grid.DestroyRow (i);
 		}
 	}
 
@@ -75,7 +165,7 @@ public class GridManager : MonoBehaviour {
 		for (int row = Height; row >= 0; row--) {
 			output += "\n";
 			for (int col = 0; col < Width; col++) {
-				var bit = Grid[col, row] ? "1" : "0";
+				var bit = Grid[col, row] == null ? "0" : "1";
 				output += bit;
 			}
 		}
@@ -84,50 +174,73 @@ public class GridManager : MonoBehaviour {
 		canvas.SetText (output);
 	}
 
+	public void TetrominoLandedEventHandler (TetrominoLandedEvent e) {
+		if (FullRowIndexes ().Length > 0) {
+			var indexes = FullRowIndexes ();
+			Debug.LogFormat ("Full row indexes: {0}", indexes);
+			EventManager.Instance.TriggerEvent (new RowsFullEvent (indexes));
+		}
+	}
+
+	int[] FullRowIndexes () {
+		List<int> fullRowIndexes = new List<int> ();
+		for (int row = 0; row < Height; row++) {
+			List<bool> blocksInRow = new List<bool> ();
+			for (int col = 0; col < Width; col++) {
+				blocksInRow.Add (Grid[col, row] != null);
+			}
+
+			if (blocksInRow.All (value => value == true)) {
+				fullRowIndexes.Add (row);
+			}
+		}
+
+		return fullRowIndexes.ToArray ();
+	}
+
 	// TODO: move this to a separate class.
 	// **************
 	// Validate moves
 	// **************
 
-	public void ValidateEvent (MoveTetrominoEvent e) {
+	public void ValidateMoveEventHandler (MoveTetrominoEvent e) {
 		ValidateMove (e.CurrentPosition, e.Direction);
 	}
 
-	public void ValidateEvent (RotateTetrominoEvent e) {
+	public void ValidateRotationEventHandler (RotateTetrominoEvent e) {
 		ValidateRotation (e.CurrentPosition, e.Direction);
 	}
 
 	public void ValidateMove (Transform currentPosition, MoveDirection direction) {
-		bool[, ] initalGridState = Grid.Clone () as bool[, ];
+		Transform[, ] initalGridState = new Transform[Grid.Width, Grid.Height];
+		System.Array.Copy (Grid.Value, initalGridState, Grid.Width * Grid.Height);
 
-		FreeGridForAllBlocksInTetromino (currentPosition);
+		Grid.FreeGridForTetromino (currentPosition);
 
 		bool isValid = AssertValidTetrominoMove (currentPosition, DirectionToVector.For (direction));
 
 		if (isValid) {
 			EventManager.Instance.QueueEvent (new MoveValidEvent (currentPosition, direction));
 		} else {
-			Grid = initalGridState;
-			OccupyGridForAllBlocksInTetromino (currentPosition);
+			Grid.Value = initalGridState;
 			EventManager.Instance.QueueEvent (new MoveInvalidEvent (currentPosition, direction));
 		}
 	}
 
 	public void ValidateRotation (Transform currentPosition, RotateDirection direction) {
-		bool[, ] initalGridState = Grid.Clone () as bool[, ];
+		Transform[, ] initalGridState = new Transform[Grid.Width, Grid.Height];
+		System.Array.Copy (Grid.Value, initalGridState, Grid.Width * Grid.Height);
 
-		FreeGridForAllBlocksInTetromino (currentPosition);
+		Grid.FreeGridForTetromino (currentPosition);
 
 		bool isValid = AssertValidTetrominoRotation (currentPosition, direction);
 
 		if (isValid) {
 			EventManager.Instance.QueueEvent (new RotateValidEvent (currentPosition, direction));
 		} else {
-			Grid = initalGridState;
-			OccupyGridForAllBlocksInTetromino (currentPosition);
+			Grid.Value = initalGridState;
 			EventManager.Instance.QueueEvent (new RotateInvalidEvent (currentPosition, direction));
 		}
-
 	}
 
 	public bool AssertValidTetrominoMove (Transform tetromino, Vector3 to) {
@@ -175,29 +288,7 @@ public class GridManager : MonoBehaviour {
 		return
 		x >= 0 &&
 			y >= 0 &&
-			x < Grid.GetLength (0) &&
-			Grid[x, y] == false;
-	}
-
-	public void Move (Transform tetromino) {
-		OccupyGridForAllBlocksInTetromino (tetromino);
-	}
-
-	private void OccupyGridForAllBlocksInTetromino (Transform tetromino) {
-		foreach (Transform t in tetromino) {
-			int x = (int) t.position.Rounded ().x;
-			int y = (int) t.position.Rounded ().y;
-			Debug.LogFormat ("Setting true: {0}, {1}", x, y);
-			Grid.SetValue (true, x, y);
-		}
-	}
-
-	private void FreeGridForAllBlocksInTetromino (Transform tetromino) {
-		foreach (Transform t in tetromino) {
-			int x = (int) t.position.Rounded ().x;
-			int y = (int) t.position.Rounded ().y;
-			Debug.LogFormat ("Setting false: {0}, {1}", x, y);
-			Grid.SetValue (false, x, y);
-		}
+			x < Grid.Width &&
+			Grid[x, y] == null;
 	}
 }

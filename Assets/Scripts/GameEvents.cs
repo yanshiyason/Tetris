@@ -66,6 +66,13 @@ public class RotateInvalidEvent : GameEvent {
     }
 }
 
-public class SpawnTetrominoEvent : GameEvent {
-    public SpawnTetrominoEvent () { }
+public class TetrominoLandedEvent : GameEvent {
+    public TetrominoLandedEvent () { }
+}
+
+public class RowsFullEvent : GameEvent {
+    public int[] RowIndexes;
+    public RowsFullEvent (int[] rowIndexes) {
+        RowIndexes = rowIndexes;
+    }
 }

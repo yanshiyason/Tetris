@@ -59,51 +59,40 @@ public class Tetromino : MonoBehaviour {
 	}
 
 	public void MoveValid (MoveValidEvent e) {
-		Debug.Log ("Move is valid");
 		transform.Move (e.Direction);
 
-		GridManager.Instance.Move (transform);
+		GridManager.Instance.Grid.Move (transform);
 		GridManager.Instance.Inspect ();
 	}
 
 	public void MoveInvalid (MoveInvalidEvent e) {
-		Debug.Log ("Move is invalid");
-
 		if (e.Direction == MoveDirection.Down) {
 			State = TetrominoState.landed;
 			Destroy (PlayerInputListener);
 			StopListeningForMovementEvents ();
-			Debug.Log ("Player event listener on tetromino destroyed");
 
-			EventManager.Instance.QueueEvent (new SpawnTetrominoEvent ());
+			EventManager.Instance.QueueEvent (new TetrominoLandedEvent ());
 		}
 	}
 
 	public void RotateValid (RotateValidEvent e) {
-		Debug.Log ("Rotation is valid");
-
 		Rotate (e.Direction);
 
-		GridManager.Instance.Move (transform);
+		GridManager.Instance.Grid.Move (transform);
 
 		GridManager.Instance.Inspect ();
 	}
 
-	public void RotateInvalid (RotateInvalidEvent e) {
-		Debug.Log ("Rotation is invalid");
-	}
+	public void RotateInvalid (RotateInvalidEvent e) { }
 
 	void Rotate (RotateDirection direction) {
 		switch (ValidRotations) {
 			case ValidRotations.full:
-				Debug.Log ("valid full");
 				transform.RotateInDirection (direction);
 				break;
 			case ValidRotations.none:
-				Debug.Log ("valid none");
 				break;
 			case ValidRotations.half:
-				Debug.Log ("valid half");
 				ToggleRotate ();
 				break;
 		}
@@ -111,8 +100,6 @@ public class Tetromino : MonoBehaviour {
 	}
 
 	void ToggleRotate () {
-		Debug.LogFormat ("transform.localEulerAngles.z: {0}", transform.localEulerAngles.z);
-
 		RotateDirection direction = transform.localEulerAngles.z == 90 ? RotateDirection.Left : RotateDirection.Right;
 		transform.RotateInDirection (direction);
 		transform.Rounded ();
