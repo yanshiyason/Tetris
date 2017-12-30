@@ -51,7 +51,6 @@ public class GridManager : MonoBehaviour {
 	IEnumerator ProcessFullRows (RowsFullEvent e) {
 		var sorted = e.RowIndexes.Cast<int> ().OrderByDescending (i => i);
 		foreach (int i in sorted) {
-			Debug.LogFormat ("Destroying row {0}", i);
 			yield return StartCoroutine (Grid.DestroyRow (i));
 		}
 
@@ -69,7 +68,6 @@ public class GridManager : MonoBehaviour {
 
 	void RemoveFullRows () {
 		var indexes = Grid.FullRowIndexes ();
-		Debug.LogFormat ("Full row indexes: {0}", indexes);
 		EventManager.Instance.TriggerEvent (new RowsFullEvent (indexes));
 	}
 
@@ -82,7 +80,6 @@ public class GridManager : MonoBehaviour {
 	void SpawnTetromino () {
 		int x = (int) Mathf.Round (Grid.Width / 2);
 		int y = Grid.Height;
-		Debug.LogFormat ("Spawning x: {0}, y: {1}", x, y);
 		var spawnPoint = new Vector3 (x, y, 0);
 		SpawnTetromino (spawnPoint);
 	}
@@ -105,7 +102,7 @@ public class GridManager : MonoBehaviour {
 
 		Grid.FreeGridForTetromino (currentPosition);
 
-		bool isValid = AssertValidTetrominoMove (currentPosition, DirectionToVector.For (direction));
+		bool isValid = AssertValidTetrominoMove (currentPosition, direction.ToVector3 ());
 
 		if (isValid) {
 			EventManager.Instance.TriggerEvent (new MoveValidEvent (currentPosition, direction));
@@ -145,11 +142,15 @@ public class GridManager : MonoBehaviour {
 		// start by rotating the parent
 		tetromino.RotateInDirection (direction);
 
-		// Get all child transforms
-		IEnumerable<Transform> transforms = tetromino.Cast<Transform> ();
+		// check validity of each block
+		bool isValid = true;
+		foreach (Transform block in tetromino) {
+			if (AssertValidPosition (block.position)) {
+				continue;
+			}
 
-		// Validate
-		bool isValid = transforms.Select (block => AssertValidPosition (block.position)).All (valid => valid == true);
+			isValid = false;
+		}
 
 		// reset block tetromino
 		RotateDirection opposite = direction == RotateDirection.Left ? RotateDirection.Right : RotateDirection.Left;

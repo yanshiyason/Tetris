@@ -8,8 +8,23 @@ namespace Tetris {
     namespace Extensions {
         public static class ExtendedGameObject {
             public static void Rounded (this Transform transform) {
+                transform.position = transform.position.Rounded ();
+
                 foreach (Transform t in transform) {
                     t.position = t.position.Rounded ();
+                }
+            }
+
+            public static Vector3 ToVector3 (this MoveDirection direction) {
+                switch (direction) {
+                    case MoveDirection.Down:
+                        return Vector3.down;
+                    case MoveDirection.Left:
+                        return Vector3.left;
+                    case MoveDirection.Right:
+                        return Vector3.right;
+                    default:
+                        return Vector3.down;
                 }
             }
 

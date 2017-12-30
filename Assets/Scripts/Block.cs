@@ -12,5 +12,4 @@ public class Block : MonoBehaviour {
             gameObject.GetComponent<Renderer> ().material.color = value;
         }
     }
-
 }

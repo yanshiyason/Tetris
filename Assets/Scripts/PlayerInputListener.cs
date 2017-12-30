@@ -61,10 +61,10 @@ class PlayerInputListener : MonoBehaviour {
 	}
 
 	void RotateLeft () {
-		EventManager.Instance.TriggerEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Right));
+		EventManager.Instance.TriggerEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Left));
 	}
 	void RotateRight () {
-		EventManager.Instance.TriggerEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Left));
+		EventManager.Instance.TriggerEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Right));
 	}
 
 	IEnumerator MoveBlockDownEachInterval () {
