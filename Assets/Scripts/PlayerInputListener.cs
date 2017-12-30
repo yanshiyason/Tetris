@@ -50,21 +50,21 @@ class PlayerInputListener : MonoBehaviour {
 	}
 
 	void MoveDown () {
-		EventManager.Instance.QueueEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Down));
+		EventManager.Instance.TriggerEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Down));
 	}
 
 	void MoveLeft () {
-		EventManager.Instance.QueueEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Left));
+		EventManager.Instance.TriggerEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Left));
 	}
 	void MoveRight () {
-		EventManager.Instance.QueueEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Right));
+		EventManager.Instance.TriggerEvent (new MoveTetrominoEvent (tetromino.transform, MoveDirection.Right));
 	}
 
 	void RotateLeft () {
-		EventManager.Instance.QueueEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Right));
+		EventManager.Instance.TriggerEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Right));
 	}
 	void RotateRight () {
-		EventManager.Instance.QueueEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Left));
+		EventManager.Instance.TriggerEvent (new RotateTetrominoEvent (tetromino.transform, RotateDirection.Left));
 	}
 
 	IEnumerator MoveBlockDownEachInterval () {

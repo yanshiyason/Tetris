@@ -28,12 +28,6 @@ public class TetrisManagerTest {
 		Assert.True (instance2 == null);
 	}
 
-	[UnityTest] public IEnumerator TetrisManager_Tetromino_IsInstantiated_AfterFirstFrame () {
-		yield return null;
-
-		Assert.True (TetrisManager.Instance.CurrentlyFallingTetromino != null);
-	}
-
 	[UnityTest] public IEnumerator TetrisManager_Has_An_EventManagerComponent_Attached () {
 		yield return null;
 		var component = TetrisManager.Instance.GetComponent<EventManager> ();

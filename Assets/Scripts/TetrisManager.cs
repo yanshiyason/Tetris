@@ -11,19 +11,11 @@ public class TetrisManager : MonoBehaviour {
 	GridManager GridManager;
 
 	private static TetrisManager _instance;
-	private Object[] Shapes;
-
-	public static GameObject Explosion;
-
-	public GameObject CurrentlyFallingTetromino;
 
 	void Awake () {
 		SetupSingleton ();
 		// Setup event system.
 		gameObject.AddComponent<EventManager> ();
-
-		Shapes = Resources.LoadAll ("Prefabs/Shapes", typeof (GameObject));
-		Explosion = Resources.Load ("Prefabs/Explosion", typeof (GameObject)) as GameObject;
 
 		// Setup GridManager
 		GridManager = FindObjectOfType<GridManager> ();
@@ -32,11 +24,9 @@ public class TetrisManager : MonoBehaviour {
 			throw new GridManagerNotFoundException ();
 		}
 
-		GridManager.Initialize (10, 22);
+		GridManager.Initialize (10, 20);
 
-		EventManager.Instance.AddListener<TetrominoLandedEvent> (TetrominoLandedEventHandler);
-
-		SpawnTetromino ();
+		EventManager.Instance.AddListener<GameOverEvent> (GameOverEventHandler);
 	}
 
 	// Use this for initialization
@@ -44,21 +34,8 @@ public class TetrisManager : MonoBehaviour {
 		DrawWallsAroundTetrisGrid ();
 	}
 
-	void TetrominoLandedEventHandler (TetrominoLandedEvent e) {
-		SpawnTetromino ();
-	}
-
-	void SpawnTetromino () {
-		int x = (int) Mathf.Round (GridManager.Instance.Width / 2);
-		int y = GridManager.Instance.Height;
-		Debug.LogFormat ("Spawning x: {0}, y: {1}", x, y);
-		var spawnPoint = new Vector3 (x, y, 0);
-		SpawnTetromino (spawnPoint);
-	}
-
-	void SpawnTetromino (Vector3 position) {
-		var shapePrefab = (GameObject) Shapes[Random.Range (0, Shapes.Length)];
-		CurrentlyFallingTetromino = Instantiate (shapePrefab, position, Quaternion.identity);
+	void GameOverEventHandler (GameOverEvent e) {
+		print ("GaAME OVER!");
 	}
 
 	private void SetupSingleton () {
@@ -71,8 +48,8 @@ public class TetrisManager : MonoBehaviour {
 	}
 
 	private void DrawWallsAroundTetrisGrid () {
-		int width = GridManager.Width;
-		int height = GridManager.Height;
+		int width = GridManager.Instance.Grid.Width;
+		int height = GridManager.Instance.Grid.Height;
 
 		// Bottom wall
 		for (int i = 0; i < width; i++) {

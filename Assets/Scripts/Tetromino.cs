@@ -59,7 +59,6 @@ public class Tetromino : MonoBehaviour {
 		transform.Move (e.Direction);
 
 		GridManager.Instance.Grid.Move (transform);
-		GridManager.Instance.Inspect ();
 	}
 
 	public void MoveInvalid (MoveInvalidEvent e) {
@@ -68,7 +67,7 @@ public class Tetromino : MonoBehaviour {
 			Destroy (PlayerInputListener);
 			StopListeningForMovementEvents ();
 
-			EventManager.Instance.QueueEvent (new TetrominoLandedEvent ());
+			EventManager.Instance.TriggerEvent (new TetrominoLandedEvent ());
 		}
 	}
 
@@ -76,8 +75,6 @@ public class Tetromino : MonoBehaviour {
 		Rotate (e.Direction);
 
 		GridManager.Instance.Grid.Move (transform);
-
-		GridManager.Instance.Inspect ();
 	}
 
 	public void RotateInvalid (RotateInvalidEvent e) { }
@@ -99,7 +96,6 @@ public class Tetromino : MonoBehaviour {
 	void ToggleRotate () {
 		RotateDirection direction = transform.localEulerAngles.z == 90 ? RotateDirection.Left : RotateDirection.Right;
 		transform.RotateInDirection (direction);
-		transform.Rounded ();
 	}
 
 }

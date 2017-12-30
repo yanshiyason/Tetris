@@ -76,3 +76,7 @@ public class RowsFullEvent : GameEvent {
         RowIndexes = rowIndexes;
     }
 }
+
+public class GameOverEvent : GameEvent {
+    public GameOverEvent () { }
+}

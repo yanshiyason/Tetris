@@ -3,7 +3,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-public class GridTest {
+public class GridManagerTest {
 	static GameObject go;
 
 	[SetUp] public void Init () {
@@ -13,14 +13,9 @@ public class GridTest {
 
 	[TearDown] public void Dispose () { }
 
-	[Test]
-	public void Grid_Initializes_With_The_Correct_Amount_Of_Cells () {
-		var heightPadding = 10;
-		var width = 24;
-		var height = 48;
-		var totalCells = height * width;
-		GridManager.Instance.Initialize (width, height);
-		Assert.AreEqual (GridManager.Instance.Grid.Width, width);
-		Assert.AreEqual (GridManager.Instance.Grid.Height, height + heightPadding);
+	[UnityTest] public IEnumerator GridManager_Tetromino_IsInstantiated_AfterFirstFrame () {
+		yield return null;
+
+		Assert.True (GridManager.Instance.CurrentlyFallingTetromino != null);
 	}
 }
